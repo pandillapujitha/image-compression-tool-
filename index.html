@@ -1,0 +1,217 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Image Compressor Pro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: white;
+  text-align: center;
+}
+
+/* glowing background */
+.bg {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+.blob {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  filter: blur(120px);
+  opacity: 0.4;
+  border-radius: 50%;
+  animation: move 10s infinite alternate;
+}
+.blob:nth-child(1){ background:#3b82f6; left:10%; top:20%;}
+.blob:nth-child(2){ background:#a855f7; left:60%; top:10%;}
+.blob:nth-child(3){ background:#22c55e; left:30%; top:60%;}
+@keyframes move { to { transform: translateY(80px);} }
+
+/* glass container */
+.wrap {
+  max-width: 900px;
+  margin: 30px auto;
+  padding: 20px;
+  backdrop-filter: blur(20px);
+  background: rgba(255,255,255,0.05);
+  border-radius: 20px;
+}
+
+/* upload */
+.upload-box {
+  border: 2px dashed rgba(255,255,255,0.2);
+  border-radius: 20px;
+  padding: 25px;
+  margin-bottom: 20px;
+}
+
+.custom-file {
+  padding: 10px 20px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* slider */
+input[type="range"] {
+  width: 80%;
+  height: 8px;
+  border-radius: 10px;
+  background: linear-gradient(to right, #3b82f6, #06b6d4);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #3b82f6;
+}
+
+/* button */
+button {
+  margin-top: 15px;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 12px;
+  color: white;
+  background: linear-gradient(135deg, #4f46e5, #06b6d4);
+  cursor: pointer;
+}
+
+/* cards */
+.box {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.panel {
+  flex: 1;
+  padding: 15px;
+  border-radius: 20px;
+  backdrop-filter: blur(20px);
+  background: rgba(255,255,255,0.06);
+}
+
+img {
+  width: 100%;
+  border-radius: 10px;
+}
+
+.download {
+  background: green;
+}
+</style>
+</head>
+
+<body>
+
+<div class="bg">
+  <div class="blob"></div>
+  <div class="blob"></div>
+  <div class="blob"></div>
+</div>
+
+<div class="wrap">
+
+<h1>🚀 Image Compressor Pro</h1>
+
+<!-- upload -->
+<div class="upload-box">
+  <label class="custom-file">
+    Choose Image
+    <input type="file" id="fileInput" hidden>
+  </label>
+</div>
+
+<!-- slider -->
+<p>JPEG Quality: <span id="qVal">100</span>%</p>
+<input type="range" id="quality" min="10" max="100" value="100">
+
+<br>
+<button onclick="compress()">Compress</button>
+
+<!-- result -->
+<div class="box" id="result" style="display:none;">
+  <div class="panel">
+    <h3>Before</h3>
+    <img id="beforeImg">
+    <p id="beforeSize"></p>
+  </div>
+
+  <div class="panel">
+    <h3>After</h3>
+    <img id="afterImg">
+    <p id="afterSize"></p>
+    <a id="downloadBtn" download="compressed.jpg">
+      <button class="download">Download</button>
+    </a>
+  </div>
+</div>
+
+</div>
+
+<script>
+let file;
+
+document.getElementById("fileInput").onchange = (e)=>{
+  file = e.target.files[0];
+};
+
+document.getElementById("quality").oninput = (e)=>{
+  qVal.innerText = e.target.value;
+};
+
+function compress(){
+  if(!file) return alert("Select image");
+
+  let reader = new FileReader();
+  reader.onload = function(e){
+    let img = new Image();
+    img.src = e.target.result;
+
+    img.onload = function(){
+      let canvas = document.createElement("canvas");
+      let ctx = canvas.getContext("2d");
+
+      canvas.width = img.width;
+      canvas.height = img.height;
+
+      ctx.drawImage(img,0,0);
+
+      let quality = qualitySlider.value/100;
+
+      let compressed = canvas.toDataURL("image/jpeg", quality);
+
+      // show images
+      beforeImg.src = img.src;
+      afterImg.src = compressed;
+
+      // size calc
+      beforeSize.innerText = "Size: " + (file.size/1024).toFixed(2)+" KB";
+
+      let size = Math.round((compressed.length*3)/4)/1024;
+      afterSize.innerText = "Size: " + size.toFixed(2)+" KB";
+
+      downloadBtn.href = compressed;
+
+      result.style.display = "flex";
+    };
+  };
+  reader.readAsDataURL(file);
+}
+</script>
+
+</body>
+</html>
