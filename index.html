@@ -1,0 +1,183 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image Compression Pro</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: linear-gradient(135deg,#1e1e2f,#3a3a5f);
+  color: white;
+  text-align: center;
+}
+
+.container {
+  max-width: 400px;
+  margin: 20px auto;
+  padding: 20px;
+  backdrop-filter: blur(15px);
+  background: rgba(255,255,255,0.1);
+  border-radius: 20px;
+}
+
+h1 {
+  margin-bottom: 10px;
+}
+
+/* Upload Box */
+.upload-box {
+  border: 2px dashed white;
+  padding: 20px;
+  cursor: pointer;
+  border-radius: 15px;
+}
+
+.upload-box:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+/* Image Preview */
+img {
+  max-width: 100%;
+  margin-top: 10px;
+  border-radius: 10px;
+}
+
+/* Slider */
+.slider {
+  width: 100%;
+}
+
+/* Buttons */
+button {
+  padding: 10px;
+  margin: 10px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.download {
+  background: #00c853;
+  color: white;
+}
+
+.remove-bg {
+  background: #ff5252;
+  color: white;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🖼️ Image Compression Pro</h1>
+
+<!-- Upload -->
+<div class="upload-box" onclick="fileInput.click()">
+  📂 Tap or Drag Image
+  <input type="file" id="fileInput" hidden>
+</div>
+
+<!-- Preview -->
+<img id="preview">
+
+<p id="before"></p>
+<p id="after"></p>
+<p id="saved"></p>
+
+<!-- Compression Slider -->
+<label>Compression Quality</label>
+<input type="range" min="10" max="100" value="80" id="quality" class="slider">
+
+<br>
+
+<!-- Buttons -->
+<button class="download" onclick="downloadImage()">Download</button>
+<button class="remove-bg" onclick="removeBackground()">Remove Background</button>
+
+</div>
+
+<script>
+
+let originalFile;
+let compressedBlob;
+
+// Upload + Preview
+fileInput.onchange = e => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  originalFile = file;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    preview.src = reader.result;
+    before.innerText = "Before: " + (file.size/1024).toFixed(2) + " KB";
+    compressLive();
+  };
+  reader.readAsDataURL(file);
+};
+
+// Live Compression
+quality.oninput = compressLive;
+
+function compressLive() {
+  if (!originalFile) return;
+
+  const img = new Image();
+  img.src = URL.createObjectURL(originalFile);
+
+  img.onload = () => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    canvas.width = img.width;
+    canvas.height = img.height;
+
+    ctx.drawImage(img, 0, 0);
+
+    let q = quality.value / 100;
+
+    canvas.toBlob(blob => {
+      compressedBlob = blob;
+
+      let afterSize = blob.size;
+
+      after.innerText = "After: " + (afterSize/1024).toFixed(2) + " KB";
+
+      let savedPercent = 100 - ((afterSize / originalFile.size) * 100);
+      saved.innerText = "Saved: " + savedPercent.toFixed(1) + "%";
+
+    }, "image/jpeg", q);
+  };
+}
+
+// Download
+function downloadImage() {
+  if (!compressedBlob) return;
+
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(compressedBlob);
+  a.download = "compressed.jpg";
+  a.click();
+}
+
+// Remove Background (simple fake effect)
+function removeBackground() {
+  alert("Real background removal needs AI API.\nThis is demo only.");
+
+  preview.style.filter = "brightness(1.2) contrast(1.1)";
+}
+
+</script>
+
+</body>
+</html>
