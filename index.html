@@ -1,0 +1,136 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image Compressor</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #0f172a;
+  color: white;
+  text-align: center;
+}
+
+.wrap {
+  max-width: 800px;
+  margin: auto;
+  padding: 20px;
+}
+
+h1 {
+  margin-top: 40px;
+}
+
+.dropzone {
+  margin-top: 30px;
+  padding: 40px;
+  border: 2px dashed #555;
+  border-radius: 10px;
+}
+
+button {
+  padding: 10px 20px;
+  margin-top: 10px;
+  background: #3b82f6;
+  border: none;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #2563eb;
+}
+
+input[type="range"] {
+  width: 80%;
+}
+
+img {
+  margin-top: 20px;
+  max-width: 100%;
+  border-radius: 10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="wrap">
+
+  <h1>Image Compressor</h1>
+  <p>Upload and compress your image</p>
+
+  <div class="dropzone">
+    <input type="file" id="fileInput">
+  </div>
+
+  <div>
+    <input type="range" id="quality" min="10" max="100" value="80">
+    <p>Quality: <span id="qVal">80</span>%</p>
+    <button onclick="compressImage()">Compress</button>
+  </div>
+
+  <canvas id="canvas" style="display:none;"></canvas>
+
+  <div>
+    <img id="output">
+  </div>
+
+</div>
+
+<script>
+let file;
+
+// file select
+document.getElementById("fileInput").addEventListener("change", function(e){
+  file = e.target.files[0];
+});
+
+// range update
+document.getElementById("quality").addEventListener("input", function(){
+  document.getElementById("qVal").innerText = this.value;
+});
+
+// compress function
+function compressImage(){
+  if(!file){
+    alert("Please select an image first!");
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = function(e){
+    const img = new Image();
+
+    img.onload = function(){
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+
+      canvas.width = img.width;
+      canvas.height = img.height;
+
+      ctx.drawImage(img, 0, 0);
+
+      let quality = document.getElementById("quality").value / 100;
+
+      let compressed = canvas.toDataURL("image/jpeg", quality);
+
+      document.getElementById("output").src = compressed;
+    }
+
+    img.src = e.target.result;
+  }
+
+  reader.readAsDataURL(file);
+}
+</script>
+
+</body>
+</html>
