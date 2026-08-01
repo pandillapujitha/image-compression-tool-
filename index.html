@@ -1,0 +1,250 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Image Compressor Pro MAX</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  margin:0;
+  font-family: Arial;
+  background: linear-gradient(135deg,#0f172a,#1e293b);
+  color:white;
+  text-align:center;
+}
+
+/* glass container */
+.wrap{
+  max-width:900px;
+  margin:30px auto;
+  padding:20px;
+  backdrop-filter:blur(20px);
+  background:rgba(255,255,255,0.05);
+  border-radius:20px;
+}
+
+/* upload */
+.upload-box{
+  border:2px dashed rgba(255,255,255,0.2);
+  padding:30px;
+  border-radius:20px;
+}
+.upload-box.dragover{
+  border-color:#06b6d4;
+}
+
+/* slider */
+input[type=range]{width:80%}
+
+/* buttons */
+button{
+  padding:12px 20px;
+  border:none;
+  border-radius:10px;
+  margin-top:10px;
+  background:linear-gradient(135deg,#4f46e5,#06b6d4);
+  color:white;
+}
+
+/* compare slider */
+.compare {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  margin:auto;
+}
+
+.compare img {
+  width:100%;
+  display:block;
+  border-radius:10px;
+}
+
+.after {
+  position:absolute;
+  top:0;
+  left:0;
+  overflow:hidden;
+  width:50%;
+}
+
+.slider {
+  width:100%;
+}
+
+.download{background:green}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+<h1>🚀 Image Compressor MAX</h1>
+
+<div class="upload-box" id="dropArea">
+<p>Drag & Drop or Select</p>
+<input type="file" id="fileInput" accept="image/*">
+</div>
+
+<p>Quality: <span id="qVal">100</span>%</p>
+<input type="range" id="quality" min="10" max="100" value="100">
+
+<p>Format:</p>
+<select id="format">
+<option value="image/jpeg">JPEG</option>
+<option value="image/webp">WEBP</option>
+<option value="image/png">PNG</option>
+</select>
+
+<p>Resize Width:</p>
+<input type="number" id="resize" placeholder="Original">
+
+<br>
+<button onclick="compress()">Manual Compress</button>
+
+<br><br>
+
+<!-- compare -->
+<div id="result" style="display:none">
+
+<div class="compare">
+  <img id="beforeImg">
+  <div class="after" id="afterWrap">
+    <img id="afterImg">
+  </div>
+</div>
+
+<input type="range" id="compareSlider" min="0" max="100" value="50" class="slider">
+
+<p id="beforeSize"></p>
+<p id="afterSize"></p>
+<p id="saved"></p>
+
+<a id="downloadBtn" download="compressed.jpg">
+<button class="download">Download</button>
+</a>
+
+</div>
+
+</div>
+
+<script>
+let file=null;
+
+// preview
+function showPreview(file){
+  const reader=new FileReader();
+  reader.onload=e=>{
+    document.getElementById("beforeImg").src=e.target.result;
+    document.getElementById("beforeSize").innerText=
+      "Original: "+(file.size/1024).toFixed(2)+" KB";
+
+    document.getElementById("result").style.display="block";
+
+    autoCompress(); // LIVE compress
+  };
+  reader.readAsDataURL(file);
+}
+
+// file select
+document.getElementById("fileInput").addEventListener("change",e=>{
+  file=e.target.files[0];
+  showPreview(file);
+});
+
+// drag drop
+const dropArea=document.getElementById("dropArea");
+
+dropArea.addEventListener("dragover",e=>{
+  e.preventDefault();
+  dropArea.classList.add("dragover");
+});
+
+dropArea.addEventListener("dragleave",()=>{
+  dropArea.classList.remove("dragover");
+});
+
+dropArea.addEventListener("drop",e=>{
+  e.preventDefault();
+  dropArea.classList.remove("dragover");
+
+  file=e.dataTransfer.files[0];
+  showPreview(file);
+});
+
+// slider UI
+document.getElementById("quality").addEventListener("input",e=>{
+  document.getElementById("qVal").innerText=e.target.value;
+  autoCompress();
+});
+
+// compare slider
+document.getElementById("compareSlider").addEventListener("input",e=>{
+  document.getElementById("afterWrap").style.width=e.target.value+"%";
+});
+
+// AUTO compress
+function autoCompress(){
+  if(!file) return;
+
+  const reader=new FileReader();
+
+  reader.onload=e=>{
+    const img=new Image();
+
+    img.onload=()=>{
+      const canvas=document.createElement("canvas");
+      const ctx=canvas.getContext("2d");
+
+      let w=img.width;
+      let h=img.height;
+
+      let resize=document.getElementById("resize").value;
+
+      if(resize && resize<w){
+        h=h*(resize/w);
+        w=resize;
+      }
+
+      canvas.width=w;
+      canvas.height=h;
+
+      ctx.drawImage(img,0,0,w,h);
+
+      const q=document.getElementById("quality").value/100;
+      const format=document.getElementById("format").value;
+
+      const compressed=canvas.toDataURL(format,q);
+
+      document.getElementById("afterImg").src=compressed;
+
+      let newSize=Math.round((compressed.length*3)/4)/1024;
+
+      document.getElementById("afterSize").innerText=
+        "Compressed: "+newSize.toFixed(2)+" KB";
+
+      // % saved
+      let saved=((file.size/1024 - newSize)/(file.size/1024))*100;
+
+      document.getElementById("saved").innerText=
+        "Saved: "+saved.toFixed(1)+"%";
+
+      document.getElementById("downloadBtn").href=compressed;
+    };
+
+    img.src=e.target.result;
+  };
+
+  reader.readAsDataURL(file);
+}
+
+// manual fallback
+function compress(){
+  autoCompress();
+}
+</script>
+
+</body>
+</html>
